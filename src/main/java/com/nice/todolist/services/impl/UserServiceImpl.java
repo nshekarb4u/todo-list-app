@@ -1,4 +1,4 @@
-package com.nice.todolist.services;
+package com.nice.todolist.services.impl;
 
 import static com.nice.todolist.util.Constants.REGEX_NUMERIC;
 
@@ -16,6 +16,7 @@ import com.nice.todolist.entities.User;
 import com.nice.todolist.exception.TodoException;
 import com.nice.todolist.exception.TodoNotFoundException;
 import com.nice.todolist.repositories.UserRepository;
+import com.nice.todolist.services.UserService;
 import com.nice.todolist.util.PropertyUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,6 @@ public class UserServiceImpl implements UserService {
 	
 	@Transactional
 	public User createUser(UserDto userDto) {
-		System.out.println("Inside SERVICE");
 		User userEntity = new User();
 		BeanUtils.copyProperties(userDto, userEntity);
 		userEntity.setCreatedDate(new Date());

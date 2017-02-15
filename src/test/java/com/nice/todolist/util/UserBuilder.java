@@ -23,7 +23,7 @@ public class UserBuilder {
 	}
 	
 	public UserBuilder firstName(String firstName) {
-	     model.setUserName(firstName);
+	     model.setFirstName(firstName);
 	     return this;
 	}
 	

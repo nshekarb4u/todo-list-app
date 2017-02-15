@@ -43,7 +43,7 @@ import com.nice.todolist.dto.UserDto;
 import com.nice.todolist.entities.User;
 import com.nice.todolist.exception.TodoNotFoundException;
 import com.nice.todolist.services.UserService;
-import com.nice.todolist.services.UserServiceImpl;
+import com.nice.todolist.services.impl.UserServiceImpl;
 import com.nice.todolist.util.Constants;
 import com.nice.todolist.util.TestUtil;
 import com.nice.todolist.util.UserBuilder;
@@ -145,11 +145,15 @@ public class UserControllerTest {
 
         when(userServiceMock.deleteUserById(1L)).thenReturn(deleted);
 
-        mockMvc.perform(delete("/api/users/{id}", 1L))
+        mockMvc.perform(delete("/api/users/{id}", 1L)
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .accept(TestUtil.APPLICATION_JSON_UTF8)
+        )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(TestUtil.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.userName", is(TestUtil.USERNAME)))
+                .andExpect(jsonPath("$.firstName", is(TestUtil.FIRSTNAME)))
                 .andExpect(jsonPath("$.email", is(TestUtil.EMAIL)));
 
         verify(userServiceMock, times(1)).deleteUserById(1L);
@@ -160,7 +164,10 @@ public class UserControllerTest {
     public void deleteById_UserIsNotFound_ShouldReturnHttpStatusCode404() throws Exception {
         when(userServiceMock.deleteUserById(3L)).thenThrow(new TodoNotFoundException(""));
 
-        mockMvc.perform(delete("/api/users/{id}", 3L))
+        mockMvc.perform(delete("/api/users/{id}", 3L)
+        		.contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .accept(TestUtil.APPLICATION_JSON_UTF8)
+        	   )
                 .andExpect(status().isNotFound());
 
         verify(userServiceMock, times(1)).deleteUserById(3L);
@@ -174,7 +181,10 @@ public class UserControllerTest {
          
         when(userServiceMock.getAllUsers()).thenReturn(Arrays.asList(first, second));
         
-        mockMvc.perform(get("/api/users"))
+        mockMvc.perform(get("/api/users")
+        		  .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                  .accept(TestUtil.APPLICATION_JSON_UTF8)
+        )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(TestUtil.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -194,13 +204,17 @@ public class UserControllerTest {
         
         when(userServiceMock.findUserByIdOrName(userId)).thenReturn(found);
         
-        mockMvc.perform(get("/api/users/{id}", 1L))
+        mockMvc.perform(get("/api/users/{id}", 1L)
+        		.contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .accept(TestUtil.APPLICATION_JSON_UTF8)
+        )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(TestUtil.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.userName", is("Lorem ipsum")))
-                .andExpect(jsonPath("$.email", is("Foo")));
-
+                .andExpect(jsonPath("$.userName", is(TestUtil.USERNAME)))
+                .andExpect(jsonPath("$.email", is(TestUtil.EMAIL)))
+                .andExpect(jsonPath("$.firstName", is(TestUtil.FIRSTNAME)));
+        
         verify(userServiceMock, times(1)).findUserByIdOrName(userId);
         verifyNoMoreInteractions(userServiceMock);
     }
@@ -210,7 +224,10 @@ public class UserControllerTest {
     	String userId = String.valueOf(1L);
         when(userServiceMock.findUserByIdOrName(userId)).thenThrow(new TodoNotFoundException(""));
 
-        mockMvc.perform(get("/api/users/{id}", 1L))
+        mockMvc.perform(get("/api/users/{id}", 1L)
+        		.contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .accept(TestUtil.APPLICATION_JSON_UTF8)
+        )
                 .andExpect(status().isNotFound());
 
         verify(userServiceMock, times(1)).findUserByIdOrName(userId);
@@ -219,7 +236,7 @@ public class UserControllerTest {
 
     @Test
     public void update_EmptyUserEntry_ShouldReturnValidationErrorForUserName() throws Exception {
-        UserDto dto = TestUtil.getTestUserDto();
+        UserDto dto = new UserDto();
 
         mockMvc.perform(put("/api/users/{id}", 1L)
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -234,10 +251,9 @@ public class UserControllerTest {
     }
 
     @Test
-    public void update_UserNameAndEmailAreTooLong_ShouldReturnValidationErrorsForEmailAndUserName() throws Exception {
-    	TestUtil.getTestUserDto();
-
-        UserDto dto = new UserDto();dto.setUserName(TestUtil.createStringWithLength(Constants.MAX_LENGTH_USERNAME + 1));
+    public void update_UserNameIsTooLong_ShouldReturnValidationErrorsForUserName() throws Exception {
+        UserDto dto = new UserDto();
+        dto.setUserName(TestUtil.createStringWithLength(Constants.MAX_LENGTH_USERNAME + 1));
 
         mockMvc.perform(put("/api/users/{id}", 1L)
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -245,11 +261,9 @@ public class UserControllerTest {
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(TestUtil.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.fieldErrors", hasSize(2)))
-                .andExpect(jsonPath("$.fieldErrors[*].path", containsInAnyOrder("title", "description")))
-                .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder(
-                        "The maximum length of the description is 500 characters.",
-                        "The maximum length of the title is 100 characters."
+                .andExpect(jsonPath("$.errors", hasSize(1)))
+                .andExpect(jsonPath("$.errors[*]", containsInAnyOrder(
+                		"userName:The maximum length of the userName is 30 characters."
                 )));
 
         verifyZeroInteractions(userServiceMock);
@@ -257,11 +271,11 @@ public class UserControllerTest {
 
     @Test
     public void update_UserEntryNotFound_ShouldReturnHttpStatusCode404() throws Exception {
-        UserDto dto = TestUtil.getUpdatedTestUserDto();
+        UserDto dto = TestUtil.getUpdatedTestUserDto();dto.setId(3L);
 
         when(userServiceMock.updateUser(anyLong(), any(UserDto.class))).thenThrow(new TodoNotFoundException(""));
 
-        mockMvc.perform(put("/api/todo/{id}", 1L)
+        mockMvc.perform(put("/api/users/{id}", 3L)
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
                 .content(TestUtil.convertObjectToJsonBytes(dto))
         )
@@ -278,7 +292,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void update_TodoEntryFound_ShouldUpdateTodoEntryAndReturnIt() throws Exception {
+    public void update_UserEntryFound_ShouldUpdateUserEntryAndReturnIt() throws Exception {
         UserDto dto = TestUtil.getUpdatedTestUserDto();
 
         User updated = TestUtil.getUpdatedTestUser();

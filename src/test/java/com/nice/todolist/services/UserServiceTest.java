@@ -28,6 +28,7 @@ import com.nice.todolist.entities.User;
 import com.nice.todolist.exception.TodoException;
 import com.nice.todolist.exception.TodoNotFoundException;
 import com.nice.todolist.repositories.UserRepository;
+import com.nice.todolist.services.impl.UserServiceImpl;
 import com.nice.todolist.util.TestUtil;
 
 /**

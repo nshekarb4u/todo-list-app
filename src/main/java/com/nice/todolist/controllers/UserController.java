@@ -27,9 +27,7 @@ public class UserController {
 	
 	@RequestMapping(method=RequestMethod.POST)
 	public UserDto createNewUser(@RequestBody @Valid UserDto userDto){
-		System.out.println("BEFOREEEEEEEEEEEE");
 		User addedUser = userService.createUser(userDto);
-		System.out.println("AFTERRRRRRRRRRRRRRR");
 		//BeanUtils.copyProperties(addedUser, userDto);
 		return convertFromUserEntityToDto(addedUser);
 	}
@@ -50,8 +48,9 @@ public class UserController {
     }
 	
 	@RequestMapping(value="/{id}", method=RequestMethod.DELETE)
-    public void deleteUser(@PathVariable("id") Long id) {
-        userService.deleteUserById(id);
+    public UserDto deleteUser(@PathVariable("id") Long id) {        
+		User deleted = userService.deleteUserById(id);
+		return convertFromUserEntityToDto(deleted);
     }
 	
 	private UserDto convertFromUserEntityToDto(User user) {

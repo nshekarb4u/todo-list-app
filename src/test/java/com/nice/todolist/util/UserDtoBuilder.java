@@ -23,7 +23,7 @@ public class UserDtoBuilder {
 	}
 	
 	public UserDtoBuilder firstName(String firstName) {
-	     model.setUserName(firstName);
+	     model.setFirstName(firstName);
 	     return this;
 	}
 	
