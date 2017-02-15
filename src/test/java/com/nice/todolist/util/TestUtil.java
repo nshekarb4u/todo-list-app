@@ -7,7 +7,9 @@ import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nice.todolist.dto.TaskDto;
 import com.nice.todolist.dto.UserDto;
+import com.nice.todolist.entities.Task;
 import com.nice.todolist.entities.User;
 
 public class TestUtil {
@@ -79,6 +81,21 @@ public class TestUtil {
                 .firstName(FIRSTNAME_UPDATED)
                 .email(EMAIL_UPDATED)
                 .build();
+	}
+	
+	public static TaskDto getTestTaskDto() {
+		return new TaskDtoBuilder()
+		          .name("Task Name1")
+		          .description("Description1")
+		          .build();
+	}
+	
+	public static Task getTestTask() {
+		return new TaskBuilder()
+		          .id(1L)
+		          .name(USERNAME)
+		          .description(EMAIL)
+		          .build();
 	}
 
 }
