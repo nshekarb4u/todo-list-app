@@ -23,12 +23,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import com.nice.todolist.dto.UserDto;
 import com.nice.todolist.entities.User;
 import com.nice.todolist.exception.TodoException;
 import com.nice.todolist.exception.TodoNotFoundException;
 import com.nice.todolist.repositories.UserRepository;
-import com.nice.todolist.services.UserService;
-import com.nice.todolist.util.UserBuilder;
+import com.nice.todolist.util.TestUtil;
 
 /**
  * @author nshek
@@ -36,13 +36,7 @@ import com.nice.todolist.util.UserBuilder;
  */
 public class UserServiceTest {
 	
-	private static final Long ID = 1L;
-    private static final String USERNAME = "userName";
-    private static final String USERNAME_UPDATED = "userNameUpdated";
-    private static final String FIRSTNAME = "firstName";
-    private static final String FIRSTNAME_UPDATED = "firstNameUpdated";
-    private static final String EMAIL = "email@nice.com";
-    private static final String EMAIL_UPDATED = "emailupdated@nice.com";
+	private static final Long ID = 1L;    
     private static final Date CURRENT_DATE = new Date();
     
     private static final SimpleDateFormat DATEFORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
@@ -53,12 +47,12 @@ public class UserServiceTest {
 	@Before
     public void setUp() {
 		initMocks(this);
-		userService = new UserService(mockUserRepository);
+		userService = new UserServiceImpl(mockUserRepository);
 	}
 	
 	@Test
 	public void add_NewUser_ShouldBeSavedSuccessfully() {
-		User userDto = getTestUser();
+		UserDto userDto = TestUtil.getTestUserDto();
 		
 		userService.createUser(userDto);
 		
@@ -93,7 +87,7 @@ public class UserServiceTest {
 	
 	@Test
     public void findById_UserEntryFound_ShouldReturnFoundUserEntry()  {
-        User model = getTestUser();model.setId(ID);
+        User model = TestUtil.getTestUser();model.setId(ID);
 
         when(mockUserRepository.findOne(ID)).thenReturn(model);
 
@@ -117,13 +111,13 @@ public class UserServiceTest {
 	
 	@Test
     public void findByUserName_UserEntryFound_ShouldReturnFoundUserEntry()  {
-        User model = getTestUser();
+        User model = TestUtil.getTestUser();
 
-        when(mockUserRepository.findByUserName(USERNAME)).thenReturn(model);
+        when(mockUserRepository.findByUserName(TestUtil.USERNAME)).thenReturn(model);
 
-        User actual = userService.findUserByIdOrName(USERNAME);
+        User actual = userService.findUserByIdOrName(TestUtil.USERNAME);
 
-        verify(mockUserRepository, times(1)).findByUserName(USERNAME);
+        verify(mockUserRepository, times(1)).findByUserName(TestUtil.USERNAME);
         verifyNoMoreInteractions(mockUserRepository);
 
         assertThat(actual, is(model));
@@ -131,17 +125,17 @@ public class UserServiceTest {
 
 	@Test(expected = TodoNotFoundException.class)
     public void findByUserName_UserEntryNotFound_ShouldThrowException() {
-        when(mockUserRepository.findByUserName(USERNAME)).thenReturn(null);
+        when(mockUserRepository.findByUserName(TestUtil.USERNAME)).thenReturn(null);
 
-        userService.findUserByIdOrName(USERNAME);
+        userService.findUserByIdOrName(TestUtil.USERNAME);
 
-        verify(mockUserRepository, times(1)).findByUserName(USERNAME);        
+        verify(mockUserRepository, times(1)).findByUserName(TestUtil.USERNAME);        
         verifyNoMoreInteractions(mockUserRepository);
     }
 	
 	@Test
     public void deleteById_UserEntryFound_ShouldDeleteUserEntryAndReturnIt() {
-        User model = getTestUser();model.setId(ID);
+        User model = TestUtil.getTestUser();model.setId(ID);
 
         when(mockUserRepository.findOne(ID)).thenReturn(model);
 
@@ -157,7 +151,7 @@ public class UserServiceTest {
 
 	@Test(expected = TodoException.class)
     public void deleteById_UserEntryFound_ShouldDeleteFailAndThrowException() {
-        User model = getTestUser();model.setId(ID);
+        User model = TestUtil.getTestUser();model.setId(ID);
          
         when(mockUserRepository.findOne(ID)).thenReturn(model);
         doThrow(new TodoException()).when(mockUserRepository).delete(model);
@@ -182,9 +176,9 @@ public class UserServiceTest {
 
     @Test
     public void update_UserEntryFound_ShouldUpdateSuccessfully() throws TodoNotFoundException {
-        User dto = getUpdatedTestUser();
+        UserDto dto = TestUtil.getUpdatedTestUserDto();
         
-        User model = getTestUser();model.setId(ID);
+        User model = TestUtil.getTestUser();model.setId(ID);
 
         when(mockUserRepository.findOne(dto.getId())).thenReturn(model);
         ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
@@ -207,7 +201,7 @@ public class UserServiceTest {
 
     @Test(expected = TodoNotFoundException.class)
     public void update_UserEntryNotFound_ShouldThrowException() throws TodoNotFoundException {
-    	User dto = getUpdatedTestUser();
+    	UserDto dto = TestUtil.getUpdatedTestUserDto();
 
         when(mockUserRepository.findOne(dto.getId())).thenReturn(null);
 
@@ -216,28 +210,4 @@ public class UserServiceTest {
         verify(mockUserRepository, times(1)).findOne(dto.getId());
         verifyNoMoreInteractions(mockUserRepository);
     }
-
-    /**
-	 * @return User - having updated details
-	 */
-	private User getUpdatedTestUser() {
-		return new UserBuilder()
-                .id(ID)
-                .userName(USERNAME_UPDATED)
-                .firstName(FIRSTNAME_UPDATED)
-                .email(EMAIL_UPDATED)
-                .build();
-	}
-
-	/**
-	 * @return 
-	 */
-	private User getTestUser() {
-		return new UserBuilder()
-                .userName(USERNAME)
-                .firstName(FIRSTNAME)
-                .email(EMAIL)
-                .build();
-	}
-
 }

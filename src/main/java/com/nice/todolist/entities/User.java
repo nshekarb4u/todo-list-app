@@ -1,6 +1,6 @@
 package com.nice.todolist.entities;
 
-import static com.nice.todolist.util.Constants.USERNAME_MAX_LENGTH;
+import static com.nice.todolist.util.Constants.MAX_LENGTH_USERNAME;
 import static com.nice.todolist.util.Constants.REGEX_USER_NAME;
 import java.util.Date;
 
@@ -30,7 +30,7 @@ public class User {
 	@Column(name="ID")
 	private Long id;
 	
-	@Column(name="USER_NAME", nullable = false, length = USERNAME_MAX_LENGTH)
+	@Column(name="USER_NAME", nullable = false, length = MAX_LENGTH_USERNAME)
 	@Pattern(regexp = REGEX_USER_NAME, message = "{userName_Invalid}")
 	private String userName;
 	
@@ -57,5 +57,53 @@ public class User {
 	
 	@JsonSerialize(using=JsonDateSerializer.class)
 	@Column(name="MODIFIED_DATE")
-	private Date modifiedDate;	
+	private Date modifiedDate;
+	
+	public static Builder getBuilder(String userName) {
+        return new Builder(userName);
+    }
+	
+	public static class Builder {
+
+        private User built;
+        
+        public Builder(String userName) {
+            built = new User();
+            built.userName = userName;
+        }
+        
+        public User build() {
+            return built;
+        }
+        
+        public Builder firstName(String firstName) {
+            built.firstName = firstName;
+            return this;
+        }
+        
+        public Builder middleName(String middleName) {
+            built.middleName = middleName;
+            return this;
+        }
+        
+        public Builder lastName(String lastName) {
+            built.lastName = lastName;
+            return this;
+        }
+        
+        public Builder email(String email) {
+            built.email = email;
+            return this;
+        }
+        
+        public Builder createdDate(Date createdDate) {
+            built.createdDate = createdDate;
+            return this;
+        }
+        
+        public Builder modifiedDate(Date modifiedDate) {
+            built.modifiedDate = modifiedDate;
+            return this;
+        }
+	}
 }
