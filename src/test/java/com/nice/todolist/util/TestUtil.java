@@ -85,17 +85,33 @@ public class TestUtil {
 	
 	public static TaskDto getTestTaskDto() {
 		return new TaskDtoBuilder()
-		          .name("Task Name1")
-		          .description("Description1")
+		          .name("taskNameDto")
+		          .description("taskDescriptionDto")
 		          .build();
 	}
 	
 	public static Task getTestTask() {
 		return new TaskBuilder()
 		          .id(1L)
-		          .name(USERNAME)
-		          .description(EMAIL)
+		          .name("taskName")
+		          .description("taskDescription")
 		          .build();
+	}
+	
+	public static Task getUpdatedTestTask() {
+		return new TaskBuilder()
+                .id(ID)
+                .name("name_Updated")
+                .description("description_Updated")
+                .build();
+	}
+	
+	public static TaskDto getUpdatedTestTaskDto() {
+		return new TaskDtoBuilder()
+                .id(ID)
+                .name("name_Updated")
+                .description("description_Updated")
+                .build();
 	}
 
 }

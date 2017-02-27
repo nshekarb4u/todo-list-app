@@ -1,28 +1,28 @@
 package com.nice.todolist.entities;
 
-import static com.nice.todolist.util.Constants.MAX_LENGTH_USERNAME;
-import static com.nice.todolist.util.Constants.REGEX_USER_NAME;
 import java.util.Date;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
-import org.hibernate.validator.constraints.Email;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.nice.todolist.util.JsonDateSerializer;
-
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name="USER",schema="TODODB")
-@Data
+@Getter
+@Setter
 public class User {
 
 	@Id
@@ -30,34 +30,36 @@ public class User {
 	@Column(name="ID")
 	private Long id;
 	
-	@Column(name="USER_NAME", nullable = false, length = MAX_LENGTH_USERNAME)
-	@Pattern(regexp = REGEX_USER_NAME, message = "{userName_Invalid}")
+	@Column(name="USER_NAME")
 	private String userName;
 	
-	@Column(name="FIRST_NAME", nullable = true, length = 50)
+	@Column(name="FIRST_NAME")
 	private String firstName;
 	
-	@Column(name="MIDDLE_NAME", nullable = true, length = 50)
+	@Column(name="MIDDLE_NAME")
 	private String middleName;
 	
-	@Column(name="LAST_NAME", nullable = true, length = 50)
+	@Column(name="LAST_NAME")
 	private String lastName;
 	
-	@Size(max=120, message = "{email_Size}")
 	@Column(name="EMAIL", nullable = true)
-	@Email(message = "{email_Pattern}")
 	private String email;
 	
 	@Column(name="ROLE_ID")
 	private String roleId;
 	
-	@JsonSerialize(using=JsonDateSerializer.class)
 	@Column(name="CREATED_DATE")
 	private Date createdDate;
 	
-	@JsonSerialize(using=JsonDateSerializer.class)
 	@Column(name="MODIFIED_DATE")
 	private Date modifiedDate;
+	
+	@JsonIgnore
+	@OneToMany
+	@JoinTable(name="TASK_ASSIGNMENT",schema="TODODB",
+	           joinColumns={@JoinColumn(name="user_id",referencedColumnName="id")},
+	           inverseJoinColumns={@JoinColumn(name="task_id",referencedColumnName="id")})	
+	private Set<Task> assignedTasks;
 	
 	public static Builder getBuilder(String userName) {
         return new Builder(userName);

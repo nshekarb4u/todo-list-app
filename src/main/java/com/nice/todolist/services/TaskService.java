@@ -8,6 +8,8 @@ import java.util.List;
 import com.nice.todolist.dto.TaskDto;
 import com.nice.todolist.entities.Task;
 import com.nice.todolist.exception.TodoNotFoundException;
+import com.nice.todolist.model.TaskAssignmentRequest;
+import com.nice.todolist.model.TaskAssignmentResponse;
 
 
 /**
@@ -43,7 +45,7 @@ public interface TaskService {
      * @return  The found task-entry.
      * @throws TodoNotFoundException    if no task entry is found with the given id.
      */
-    public Task findById(Long id) throws TodoNotFoundException;
+    public Task findById(Long id);
 
     /**
      * Updates the information of a task entry.
@@ -51,6 +53,22 @@ public interface TaskService {
      * @return  The updated task entry.
      * @throws TodoNotFoundException    If no task entry is found with the given id.
      */
-    public Task update(TaskDto updated) throws TodoNotFoundException;
+    public Task updateTask(TaskDto updated);
+    
+    /**
+     * Find tasks by status code.
+     * @param statusCode   The information of the tasks with given status.
+     * @return  The task list matching status.
+     * @throws TodoNotFoundException    If no task entry is found with the given status.
+     */
+    public List<Task> findTasksByStatus(String statusCode);
+    
+    /**
+     * Assign tasks to Users.
+     * @param TaskAssignmentRequest   Task assignment details.
+     * @return  The assigned details.
+     * @throws TodoNotFoundException    If no task/user entry is found with the given assignment details.
+     */
+    public TaskAssignmentResponse assignTask(TaskAssignmentRequest assignmentRequest);
 
 }

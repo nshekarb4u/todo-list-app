@@ -1,15 +1,18 @@
 package com.nice.todolist.entities;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,8 +20,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nice.todolist.util.JsonDateSerializer;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name="TASK",schema="TODODB")
 public class Task {
@@ -42,9 +48,16 @@ public class Task {
 	private Date createdDate;
 	
 	@JsonIgnore
-	@OneToOne(cascade=CascadeType.ALL)
+	@ManyToOne
     @JoinTable(name="TASK_ASSIGNMENT",schema="TODODB",
                joinColumns={@JoinColumn(name="task_id", referencedColumnName="id")},
                inverseJoinColumns={@JoinColumn(name="user_id", referencedColumnName="id")})
     private User user;
+	
+	@JsonIgnore
+	@ManyToMany(fetch=FetchType.LAZY)
+	@JoinTable(name = "TODOLIST_TASK",schema="TODODB",
+	           joinColumns={@JoinColumn(name="task_id", referencedColumnName="id")},
+	           inverseJoinColumns={@JoinColumn(name="todolist_id",referencedColumnName="id")})
+	private List<TodoList> todoLists;
 }

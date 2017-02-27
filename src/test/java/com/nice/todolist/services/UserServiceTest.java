@@ -143,7 +143,7 @@ public class UserServiceTest {
         User actual = userService.deleteUserById(ID);
 
         verify(mockUserRepository, times(1)).findOne(ID);
-        verify(mockUserRepository, times(1)).delete(model);
+        verify(mockUserRepository, times(1)).delete(model.getId());
         
         verifyNoMoreInteractions(mockUserRepository);
 
@@ -155,12 +155,14 @@ public class UserServiceTest {
         User model = TestUtil.getTestUser();model.setId(ID);
          
         when(mockUserRepository.findOne(ID)).thenReturn(model);
-        doThrow(new TodoException()).when(mockUserRepository).delete(model);
+        when(mockUserRepository.save(model)).thenReturn(model);
+        doThrow(new TodoException()).when(mockUserRepository).delete(model.getId());
         
         userService.deleteUserById(ID);
 
         verify(mockUserRepository, times(1)).findOne(ID);
-        verify(mockUserRepository, times(1)).delete(model);
+        verify(mockUserRepository, times(1)).save(model);
+        verify(mockUserRepository, times(1)).delete(model.getId());
         
         verifyNoMoreInteractions(mockUserRepository);
     }

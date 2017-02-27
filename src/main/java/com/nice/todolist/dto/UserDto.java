@@ -1,6 +1,10 @@
 package com.nice.todolist.dto;
 
+import static com.nice.todolist.util.Constants.REGEX_USER_NAME;
+
 import java.util.Date;
+
+import javax.validation.constraints.Pattern;
 
 import lombok.Data;
 
@@ -18,6 +22,7 @@ public class UserDto {
 	private Long id;
 	
 	@NotEmpty
+	@Pattern(regexp = REGEX_USER_NAME)
 	@Length(min=Constants.MIN_LENGTH_USERNAME,max = Constants.MAX_LENGTH_USERNAME)
 	private String userName;
 	

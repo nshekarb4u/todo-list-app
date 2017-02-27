@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
+import com.nice.todolist.services.TaskService;
 import com.nice.todolist.services.UserService;
 
 @Configuration
@@ -22,8 +23,18 @@ public class TestContext {
         return messageSource;
     }
 
-    @Bean
+    /*@Bean
     public UserService userService() {
         return Mockito.mock(UserService.class);
+    }*/
+    
+    /*@Bean
+    public TaskService taskService() {
+        return Mockito.mock(TaskService.class);
+    }*/
+    
+    @Bean
+    public TaskService taskService() {
+        return Mockito.mock(TaskService.class);
     }
 }

@@ -28,9 +28,7 @@ import com.nice.todolist.entities.Task;
 import com.nice.todolist.exception.TodoException;
 import com.nice.todolist.exception.TodoNotFoundException;
 import com.nice.todolist.repositories.TaskRepository;
-import com.nice.todolist.repositories.UserRepository;
 import com.nice.todolist.services.impl.TaskServiceImpl;
-import com.nice.todolist.services.impl.UserServiceImpl;
 import com.nice.todolist.util.TestUtil;
 
 /**
@@ -45,26 +43,26 @@ public class TaskServiceTest {
     private static final SimpleDateFormat DATEFORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
     
     @Mock private TaskRepository mockTaskRepository;
-    private TaskService userService;
+    private TaskService taskService;
     
 	@Before
     public void setUp() {
 		initMocks(this);
-		userService = new TaskServiceImpl(mockTaskRepository);
+		taskService = new TaskServiceImpl(mockTaskRepository);
 	}
 	
 	@Test
-	public void add_NewUser_ShouldBeSavedSuccessfully() {
+	public void add_NewTask_ShouldBeSavedSuccessfully() {
 		TaskDto taskDto = TestUtil.getTestTaskDto();
 		
-		userService.createTask(taskDto);
+		taskService.createTask(taskDto);
 		
-		ArgumentCaptor<Task> userArgument = ArgumentCaptor.forClass(Task.class);
-		verify(mockTaskRepository, times(1)).save(userArgument.capture());
+		ArgumentCaptor<Task> taskArgument = ArgumentCaptor.forClass(Task.class);
+		verify(mockTaskRepository, times(1)).save(taskArgument.capture());
 		
 		verifyNoMoreInteractions(mockTaskRepository);
 		
-		Task model = userArgument.getValue();
+		Task model = taskArgument.getValue();
 
         assertNull(model.getId());
         assertThat(model.getName(), is(taskDto.getName()));
@@ -73,11 +71,11 @@ public class TaskServiceTest {
 	}
 	
 	@Test
-    public void findAll_ShouldReturnListOfUsers() {
+    public void findAll_ShouldReturnListOfTasks() {
         List<Task> models = new ArrayList<>();
         when(mockTaskRepository.findAll()).thenReturn(models);
 
-        List<Task> actual = userService.getAllUsers();
+        List<Task> actual = taskService.getAllTasks();
 
         verify(mockTaskRepository, times(1)).findAll();
         
@@ -87,63 +85,39 @@ public class TaskServiceTest {
     }
 	
 	@Test
-    public void findById_UserEntryFound_ShouldReturnFoundUserEntry()  {
-        Task model = TestUtil.getTestUser();model.setId(ID);
+    public void findById_TaskEntryFound_ShouldReturnFoundTaskEntry()  {
+        Task model = TestUtil.getTestTask();model.setId(ID);
 
-        when(mockTaskRepository.findOne(ID)).thenReturn(model);
+        when(mockTaskRepository.fetchByTaskId(ID)).thenReturn(model);
 
-        Task actual = userService.findUserByIdOrName(String.valueOf(ID));
+        Task actual = taskService.findById(ID);
 
-        verify(mockTaskRepository, times(1)).findOne(ID);
+        verify(mockTaskRepository, times(1)).fetchByTaskId(ID);
         verifyNoMoreInteractions(mockTaskRepository);
 
         assertThat(actual, is(model));
     }
 
 	@Test(expected = TodoNotFoundException.class)
-    public void findById_UserEntryNotFound_ShouldThrowException() {
+    public void findById_TaskEntryNotFound_ShouldThrowException() {
         when(mockTaskRepository.findOne(ID)).thenReturn(null);
 
-        userService.findUserByIdOrName(String.valueOf(ID));
+        taskService.findById(ID);
 
         verify(mockTaskRepository, times(1)).findOne(ID);        
         verifyNoMoreInteractions(mockTaskRepository);
     }
 	
 	@Test
-    public void findByUserName_UserEntryFound_ShouldReturnFoundUserEntry()  {
-        Task model = TestUtil.getTestUser();
+    public void deleteById_TaskEntryFound_ShouldDeleteTaskEntryAndReturnIt() {
+        Task model = TestUtil.getTestTask();model.setId(ID);
 
-        when(mockTaskRepository.findByUserName(TestUtil.USERNAME)).thenReturn(model);
+        when(mockTaskRepository.fetchByTaskId(ID)).thenReturn(model);
 
-        Task actual = userService.findUserByIdOrName(TestUtil.USERNAME);
+        Task actual = taskService.deleteById(ID);
 
-        verify(mockTaskRepository, times(1)).findByUserName(TestUtil.USERNAME);
-        verifyNoMoreInteractions(mockTaskRepository);
-
-        assertThat(actual, is(model));
-    }
-
-	@Test(expected = TodoNotFoundException.class)
-    public void findByUserName_UserEntryNotFound_ShouldThrowException() {
-        when(mockTaskRepository.findByUserName(TestUtil.USERNAME)).thenReturn(null);
-
-        userService.findUserByIdOrName(TestUtil.USERNAME);
-
-        verify(mockTaskRepository, times(1)).findByUserName(TestUtil.USERNAME);        
-        verifyNoMoreInteractions(mockTaskRepository);
-    }
-	
-	@Test
-    public void deleteById_UserEntryFound_ShouldDeleteUserEntryAndReturnIt() {
-        Task model = TestUtil.getTestUser();model.setId(ID);
-
-        when(mockTaskRepository.findOne(ID)).thenReturn(model);
-
-        Task actual = userService.deleteUserById(ID);
-
-        verify(mockTaskRepository, times(1)).findOne(ID);
-        verify(mockTaskRepository, times(1)).delete(model);
+        verify(mockTaskRepository, times(1)).fetchByTaskId(ID);
+        verify(mockTaskRepository, times(1)).delete(model.getId());
         
         verifyNoMoreInteractions(mockTaskRepository);
 
@@ -151,62 +125,61 @@ public class TaskServiceTest {
     }
 
 	@Test(expected = TodoException.class)
-    public void deleteById_UserEntryFound_ShouldDeleteFailAndThrowException() {
-        Task model = TestUtil.getTestUser();model.setId(ID);
+    public void deleteById_TaskEntryFound_ShouldDeleteFailAndThrowException() {
+        Task model = TestUtil.getTestTask();model.setId(ID);
          
-        when(mockTaskRepository.findOne(ID)).thenReturn(model);
-        doThrow(new TodoException()).when(mockTaskRepository).delete(model);
+        when(mockTaskRepository.fetchByTaskId(ID)).thenReturn(model);
+        doThrow(new TodoException()).when(mockTaskRepository).delete(model.getId());
         
-        userService.deleteUserById(ID);
+        taskService.deleteById(ID);
 
-        verify(mockTaskRepository, times(1)).findOne(ID);
-        verify(mockTaskRepository, times(1)).delete(model);
+        verify(mockTaskRepository, times(1)).fetchByTaskId(ID);
+        verify(mockTaskRepository, times(1)).delete(model.getId());
         
         verifyNoMoreInteractions(mockTaskRepository);
     }
 	
     @Test(expected = TodoNotFoundException.class)
-    public void deleteById_UserEntryNotFound_ShouldThrowException() {
+    public void deleteById_TaskEntryNotFound_ShouldThrowException() {
         when(mockTaskRepository.findOne(ID)).thenReturn(null);
 
-        userService.deleteUserById(ID);
+        taskService.deleteById(ID);
 
         verify(mockTaskRepository, times(1)).findOne(ID);
         verifyNoMoreInteractions(mockTaskRepository);
     }
 
     @Test
-    public void update_UserEntryFound_ShouldUpdateSuccessfully() throws TodoNotFoundException {
-        TaskDto dto = TestUtil.getUpdatedTestUserDto();
+    public void update_TaskEntryFound_ShouldUpdateSuccessfully() throws TodoNotFoundException {
+        TaskDto dto = TestUtil.getUpdatedTestTaskDto();
         
-        Task model = TestUtil.getTestUser();model.setId(ID);
+        Task model = TestUtil.getTestTask();model.setId(ID);
 
-        when(mockTaskRepository.findOne(dto.getId())).thenReturn(model);
-        ArgumentCaptor<Task> userArgument = ArgumentCaptor.forClass(Task.class);
+        when(mockTaskRepository.fetchByTaskId(dto.getId())).thenReturn(model);
+        ArgumentCaptor<Task> taskArgument = ArgumentCaptor.forClass(Task.class);
 		
 
-        userService.updateUser(ID, dto);
+        taskService.updateTask(dto);
 
-        verify(mockTaskRepository, times(1)).findOne(dto.getId());
-        verify(mockTaskRepository, times(1)).save(userArgument.capture());
+        verify(mockTaskRepository, times(1)).fetchByTaskId(dto.getId());
+        verify(mockTaskRepository, times(1)).save(taskArgument.capture());
         
         verifyNoMoreInteractions(mockTaskRepository);
 
-        Task actual = userArgument.getValue();
+        Task actual = taskArgument.getValue();
         
         assertThat(actual.getId(), is(dto.getId()));
-        assertThat(actual.getUserName(), is(dto.getUserName()));
-        assertThat(actual.getFirstName(), is(dto.getFirstName()));
-        assertThat(DATEFORMATTER.format(model.getModifiedDate()),is(DATEFORMATTER.format(CURRENT_DATE)));
+        assertThat(actual.getName(), is(dto.getName()));
+        assertThat(actual.getDescription(), is(dto.getDescription()));
     }
 
     @Test(expected = TodoNotFoundException.class)
-    public void update_UserEntryNotFound_ShouldThrowException() throws TodoNotFoundException {
-    	TaskDto dto = TestUtil.getUpdatedTestUserDto();
+    public void update_TaskEntryNotFound_ShouldThrowException() throws TodoNotFoundException {
+    	TaskDto dto = TestUtil.getUpdatedTestTaskDto();
 
         when(mockTaskRepository.findOne(dto.getId())).thenReturn(null);
 
-        userService.updateUser(ID,dto);
+        taskService.updateTask(dto);
 
         verify(mockTaskRepository, times(1)).findOne(dto.getId());
         verifyNoMoreInteractions(mockTaskRepository);

@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import com.nice.todolist.dto.UserDto;
 import com.nice.todolist.entities.User;
 import com.nice.todolist.exception.TodoException;
 import com.nice.todolist.exception.TodoNotFoundException;
+import com.nice.todolist.repositories.TaskAssignmentRepository;
 import com.nice.todolist.repositories.UserRepository;
 import com.nice.todolist.services.UserService;
 import com.nice.todolist.util.PropertyUtil;
@@ -26,6 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 
 	private UserRepository userRepository;
+	
+	@Autowired
+    private TaskAssignmentRepository taskAssignmentRepository;
 	
 	@Autowired
 	public UserServiceImpl(UserRepository userRepository){
@@ -86,19 +91,18 @@ public class UserServiceImpl implements UserService {
 		   throw new TodoNotFoundException("No record found with given id:"+userId+".Please verify and retry again." );
 		}
 		
-		try{
-			userRepository.delete(deleted);
+		try{/*
+			if(Objects.nonNull(deleted.getAssignedTasks()) && !deleted.getAssignedTasks().isEmpty()){
+				taskAssignmentRepository.deleteByUserId(userId);
+			}*/
+			
+			userRepository.delete(deleted.getId());
+		}catch(DataIntegrityViolationException dive){
+			throw new TodoException("The user appears to be having some active assigned tasks. Please either mark as complete or delete the assigned tasks "
+					+ "before attempting to deleting the user.");
 		}catch(Exception exp){
 			throw new TodoException("Could not able to remove the user. Reason:"+exp.getMessage());
 		}
 		return deleted;
-	}	
-	private User convertDtoToEntity(UserDto userDto) {
-		return User.getBuilder(userDto.getUserName())
-				   .firstName(userDto.getFirstName())
-				   .middleName(userDto.getMiddleName())
-				   .lastName(userDto.getLastName())
-				   .email(userDto.getEmail())
-				   .build();
 	}
 }

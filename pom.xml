@@ -5,7 +5,7 @@
 
 	<groupId>com.nice.todolist</groupId>
 	<artifactId>todo-list-app</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1.0</version>
 	<packaging>jar</packaging>
 
 	<name>ToDo List Application for evaluating interview candidates</name>
@@ -22,8 +22,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<!-- github server corresponds to entry in ~/.m2/settings.xml -->
-        <github.global.server>github</github.global.server>
 	</properties>
 
 	<dependencies>
@@ -64,48 +62,14 @@
 		    <groupId>org.projectlombok</groupId>
 		    <artifactId>lombok</artifactId>
 	    </dependency>
-	</dependencies>
-	<distributionManagement>
-	    <repository>
-	        <id>internal.repo</id>
-	        <name>Temporary Staging Repository</name>
-	        <url>file://${project.build.directory}/mvn-repo</url>
-	    </repository>
-	</distributionManagement>
+	    <dependency>
+	        <groupId>org.jacoco</groupId>
+	        <artifactId>jacoco-maven-plugin</artifactId>
+	         <version>0.7.9</version>
+	    </dependency>
+	</dependencies>	
 	<build>
 		<plugins>
-		    <plugin>
-		        <artifactId>maven-deploy-plugin</artifactId>
-		        <configuration>
-		               <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
-		        </configuration>
-    		</plugin>
-    		<plugin>
-			  <groupId>com.github.github</groupId>
-			  <artifactId>site-maven-plugin</artifactId>
-			  <version>0.12</version>
-			  <configuration>
-			    <message>Maven artifacts for ${project.version}</message>
-			    <noJekyll>true</noJekyll>
-			    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
-			    <branch>refs/heads/mvn-repo</branch>
-			    <includes>
-			       <include>**/*</include>
-			    </includes>
-			     <merge>true</merge>
-			    <repositoryName>todo-list-app</repositoryName>
-			    <repositoryOwner>nshekarb4u</repositoryOwner>
-			    <server>github</server>
-			  </configuration>
-			  <executions>
-			    <execution>
-			      <goals>
-			         <goal>site</goal>
-			      </goals>
-			      <phase>deploy</phase>
-			    </execution>
-			  </executions>
-			</plugin>
 			<plugin>
 			  <groupId>org.apache.maven.plugins</groupId>
 			  <artifactId>maven-source-plugin</artifactId>
@@ -129,6 +93,9 @@
 			<plugin>
 		      <groupId>org.apache.maven.plugins</groupId>
 		      <artifactId>maven-failsafe-plugin</artifactId>
+		      <configuration>
+		      	<includes>**/*Documentation.java</includes>
+		      </configuration>
 		      <executions>
 		        <execution>
 		          <id>integration-test</id>
@@ -145,10 +112,31 @@
 		        </execution>
 		      </executions>
 		    </plugin>
+		    <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-resources-plugin</artifactId>
+			    <executions>
+			        <execution>
+			            <id>copy-resources</id>
+			            <phase>package</phase>
+			            <goals>
+			                <goal>copy-resources</goal>
+			            </goals>
+			            <configuration>
+			                <outputDirectory>${project.build.outputDirectory}/static/docs</outputDirectory>
+			                <resources>
+			                    <resource>
+			                        <directory>${project.build.directory}/generated-docs</directory>
+			                    </resource>
+			                </resources>
+			            </configuration>
+			        </execution>
+			    </executions>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
+				<!-- <executions>
 			        <execution>
 			          <id>pre-integration-test</id>
 			          <goals>
@@ -161,7 +149,35 @@
 			          	<goal>stop</goal>
 			          </goals>
 			        </execution>
-			      </executions>
+			      </executions> -->
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.7.9</version>
+				<executions>
+					<execution>
+						<id>pre-unit-test</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<destFile>${project.build.directory}/coverage-reports/jacoco-ssweb.exec</destFile>
+							<propertyName>surefireArgLine</propertyName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>post-unit-test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<dataFile>${project.build.directory}/coverage-reports/jacoco-ssweb.exec</dataFile>
+							<outputDirectory>${project.reporting.outputDirectory}/jacoco-ssweb</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.nice.todolist.exception.BadRequestException;
 import com.nice.todolist.exception.ErrorResponse;
 import com.nice.todolist.exception.TodoException;
 import com.nice.todolist.exception.TodoNotFoundException;
@@ -61,7 +62,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
     }
 	
-	@ExceptionHandler(value={HttpMessageNotReadableException.class,JsonParseException.class,TypeMismatchException.class})
+	@ExceptionHandler(value={HttpMessageNotReadableException.class,JsonParseException.class,IllegalArgumentException.class,TypeMismatchException.class})
 	@ResponseBody
 	public ResponseEntity<ErrorResponse> missingParameterExceptionHandler(Exception ex) {
 		ErrorResponse response = new ErrorResponse();
@@ -72,7 +73,17 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<ErrorResponse>(response, HttpStatus.BAD_REQUEST);
 	}
 	
-	@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ExceptionHandler(value={BadRequestException.class})
+    @ResponseBody
+    public ResponseEntity<ErrorResponse> processValidationError(BadRequestException ex) {
+		ErrorResponse response = new ErrorResponse();
+		response.setSuccess(false);
+		response.setErrors(ex.getErrors());
+		response.setMessage("Input request is not valid: Please change the request and retry.");
+        return new ResponseEntity<ErrorResponse>(response, HttpStatus.BAD_REQUEST);
+    }
+	
+	@ExceptionHandler(value={MethodArgumentNotValidException.class})
     @ResponseBody
     public ResponseEntity<ErrorResponse> processValidationError(MethodArgumentNotValidException ex) {
         BindingResult result = ex.getBindingResult();
@@ -86,6 +97,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleDBException(SQLException ex) {
 		ErrorResponse response = new ErrorResponse();
 		response.setSuccess(false);
+		response.setErrors(Arrays.asList(ex.getMessage()));
 		response.setMessage("Database Error: Communication with database failed");
 		log.error("Database Error: Communication with database failed:{}",ex);
 		return new ResponseEntity<ErrorResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -96,6 +108,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleDBException(DataAccessException ex) {
 		ErrorResponse response = new ErrorResponse();
 		response.setSuccess(false);
+		response.setErrors(Arrays.asList(ex.getMessage()));
 		response.setMessage("Database Error: Communication with database failed.");
 		log.error("Database Error: Communication with database failed:{}",ex);
 		return new ResponseEntity<ErrorResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);

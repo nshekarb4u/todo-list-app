@@ -1,13 +1,22 @@
 package com.nice.todolist.controllers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.validation.Valid;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nice.todolist.dto.UserDto;
@@ -15,8 +24,10 @@ import com.nice.todolist.entities.User;
 import com.nice.todolist.services.UserService;
 
 @RestController
-@RequestMapping(value="/api/users",consumes = MediaType.APPLICATION_JSON_VALUE,produces=MediaType.APPLICATION_JSON_VALUE)
-public class UserController {
+@RequestMapping(value="/api/users"
+               ,consumes = MediaType.APPLICATION_JSON_VALUE
+               ,produces=MediaType.APPLICATION_JSON_VALUE)
+public class UserController extends BaseController {
     
 	private UserService userService;
 	
@@ -25,29 +36,44 @@ public class UserController {
 		this.userService = userService;
 	}
 	
-	@RequestMapping(method=RequestMethod.POST)
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
 	public UserDto createNewUser(@RequestBody @Valid UserDto userDto){
 		User addedUser = userService.createUser(userDto);
-		//BeanUtils.copyProperties(addedUser, userDto);
-		return convertFromUserEntityToDto(addedUser);
+		UserDto resUserDto = new UserDto();
+		BeanUtils.copyProperties(addedUser, resUserDto);
+		return resUserDto;
 	}
 
-	@RequestMapping(method=RequestMethod.GET)
-	public Iterable<User> getAllUsers(){
-		return userService.getAllUsers();
+	@GetMapping
+	public List<UserDto> getAllUsers(){
+		List<UserDto> allUsers = new ArrayList<UserDto>();
+		for(User user:userService.getAllUsers()){
+			UserDto userDto = new UserDto();
+			BeanUtils.copyProperties(user, userDto);
+			System.out.println("userDto:"+userDto);
+			allUsers.add(userDto);
+		}
+		return allUsers;
 	}
 
-	@RequestMapping(value = "/{id}", method=RequestMethod.GET)
-    public User getByIdOrName(@PathVariable("id") String idOrUserName) {
-        return userService.findUserByIdOrName(idOrUserName);
+	@GetMapping(value = "/{id}")
+    public UserDto getByIdOrName(@PathVariable("id") String idOrUserName) {
+		User foundUser = userService.findUserByIdOrName(idOrUserName);
+		UserDto userDto = new UserDto();
+		BeanUtils.copyProperties(foundUser, userDto);
+        return userDto;
     }
 	
-	@RequestMapping(value="/{id}", method=RequestMethod.PUT)
-    public User updateUser(@PathVariable("id") Long id, @RequestBody @Valid UserDto userRequest) {
-        return userService.updateUser(id, userRequest);
+	@PatchMapping(value="/{id}")
+    public UserDto updateUser(@PathVariable("id") Long id, @RequestBody @Valid UserDto userRequest) {
+		User updatedUser = userService.updateUser(id, userRequest);
+		UserDto userDto = new UserDto();
+		BeanUtils.copyProperties(updatedUser, userDto);
+        return userDto;
     }
 	
-	@RequestMapping(value="/{id}", method=RequestMethod.DELETE)
+	@DeleteMapping(value="/{id}")
     public UserDto deleteUser(@PathVariable("id") Long id) {        
 		User deleted = userService.deleteUserById(id);
 		return convertFromUserEntityToDto(deleted);
